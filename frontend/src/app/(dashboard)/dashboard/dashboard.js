@@ -4,11 +4,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context';
 import { Button, Card, LoadingSpinner, EmptyState } from '@/components/ui';
 import { useRouter } from 'next/navigation';
-<<<<<<< HEAD
 import WelcomeMessage from '@/components/ui/WelcomeMessage';
-=======
 import Link from 'next/link';
->>>>>>> a03653dbb16f9526e3b6b968d6b97857bbbd0fe8
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
@@ -22,31 +19,11 @@ export default function DashboardPage() {
       return;
     }
 
-<<<<<<< HEAD
     // Load user's letters (simulated for now)
     const loadLetters = async () => {
       try {
         // Simulate API call delay
         await new Promise(resolve => setTimeout(resolve, 800));
-        
-        setLetters([
-          {
-            id: 1,
-            title: 'Thank You Letter to Grandma',
-            recipient: 'Grandma Smith',
-            type: 'personal',
-            status: 'draft',
-            createdAt: new Date('2024-01-15')
-          },
-          {
-            id: 2,
-            title: 'Job Application Follow-up',
-            recipient: 'Hiring Manager',
-            type: 'business',
-            status: 'sent',
-            createdAt: new Date('2024-01-10')
-          }
-        ]);
       } catch (error) {
         console.error('Error loading letters:', error);
       } finally {
@@ -55,7 +32,6 @@ export default function DashboardPage() {
     };
 
     loadLetters();
-=======
     // Simulate loading user's handwriting samples
     setTimeout(() => {
       setHandwritingSamples([
@@ -89,7 +65,6 @@ export default function DashboardPage() {
       ]);
       setIsLoading(false);
     }, 1000);
->>>>>>> a03653dbb16f9526e3b6b968d6b97857bbbd0fe8
   }, [isAuthenticated, router]);
 
   if (!isAuthenticated) {
@@ -98,16 +73,11 @@ export default function DashboardPage() {
 
   if (isLoading) {
     return (
-<<<<<<< HEAD
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <LoadingSpinner size="xl" text="Loading your dashboard..." />
-=======
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading your practice dashboard...</p>
         </div>
->>>>>>> a03653dbb16f9526e3b6b968d6b97857bbbd0fe8
       </div>
     );
   }
@@ -116,17 +86,15 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
-<<<<<<< HEAD
         <div className="mb-8">
           <WelcomeMessage user={user} />
-=======
+        </div>
         <div className="mb-8 text-center">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Handwriting Practice Dashboard</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
             Welcome back, {user?.name}! Ready to improve your handwriting? 
             Upload photos of your writing for AI analysis and feedback.
           </p>
->>>>>>> a03653dbb16f9526e3b6b968d6b97857bbbd0fe8
         </div>
 
         {/* Quick Actions */}
@@ -213,15 +181,6 @@ export default function DashboardPage() {
             </Link>
           </div>
           
-<<<<<<< HEAD
-          {letters.length === 0 ? (
-            <EmptyState
-              title="No letters yet"
-              description="You haven't created any letters yet. Start writing your first letter today!"
-              actionText="Write Your First Letter"
-              onAction={() => console.log('Create letter clicked')}
-            />
-=======
           {handwritingSamples.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -234,7 +193,6 @@ export default function DashboardPage() {
                 <Button>Take Your First Assessment</Button>
               </Link>
             </div>
->>>>>>> a03653dbb16f9526e3b6b968d6b97857bbbd0fe8
           ) : (
             <div className="space-y-4 px-6 pb-6">
               {handwritingSamples.map((sample) => (
