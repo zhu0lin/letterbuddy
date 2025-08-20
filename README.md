@@ -1,36 +1,198 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# LetterBuddy - AI-Powered Letter Writing Assistant
 
-## Getting Started
+A full-stack application with a Next.js frontend and Python FastAPI backend, designed to help users create beautiful, personalized letters with AI assistance.
 
-First, run the development server:
+## 🏗️ Project Structure
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+letterbuddy/
+├── frontend/                 # Next.js Frontend Application
+│   ├── src/                  # Source code
+│   ├── public/               # Static assets
+│   ├── package.json          # Node.js dependencies
+│   ├── Dockerfile            # Frontend container
+│   └── ...
+├── backend/                  # Python FastAPI Backend
+│   ├── app/                  # Application code
+│   │   ├── api/             # API endpoints
+│   │   ├── core/            # Configuration & database
+│   │   ├── models/          # SQLAlchemy models
+│   │   ├── schemas/         # Pydantic schemas
+│   │   └── services/        # Business logic
+│   ├── requirements.txt      # Python dependencies
+│   ├── main.py              # FastAPI application
+│   └── Dockerfile           # Backend container
+├── docker-compose.yml        # Multi-service orchestration
+└── README.md                 # This file
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Quick Start with Docker
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+### Prerequisites
+- Docker
+- Docker Compose
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1. Clone and Navigate
+```bash
+git clone <repository-url>
+cd letterbuddy
+```
 
-## Learn More
+### 2. Start All Services
+```bash
+docker-compose up --build
+```
 
-To learn more about Next.js, take a look at the following resources:
+This will start:
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:8000
+- **PostgreSQL**: localhost:5432
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Access the Application
+- Open http://localhost:3000 in your browser
+- API documentation available at http://localhost:8000/docs
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 🛠️ Development Setup
 
-## Deploy on Vercel
+### Frontend Development
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Backend Development
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 🔧 Configuration
+
+### Environment Variables
+
+#### Backend (.env)
+```bash
+DATABASE_URL=postgresql://user:password@localhost/letterbuddy
+SECRET_KEY=your-secret-key-here
+ENVIRONMENT=development
+DEBUG=true
+```
+
+#### Frontend (.env.local)
+```bash
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## 📚 API Documentation
+
+Once the backend is running, visit:
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Available Endpoints
+- `POST /api/v1/auth/register` - User registration
+- `POST /api/v1/auth/login` - User authentication
+- `GET /api/v1/letters` - Get user letters
+- `POST /api/v1/letters` - Create new letter
+- `GET /api/v1/users/me` - Get current user info
+
+## 🗄️ Database
+
+The application uses PostgreSQL with the following main tables:
+- **users** - User accounts and authentication
+- **letters** - User-created letters
+
+Database migrations are handled automatically on startup.
+
+## 🐳 Docker Commands
+
+### Development
+```bash
+# Start all services
+docker-compose up
+
+# Start in background
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop all services
+docker-compose down
+```
+
+### Production Build
+```bash
+# Build production images
+docker-compose -f docker-compose.prod.yml up --build
+```
+
+## 🧪 Testing
+
+### Backend Tests
+```bash
+cd backend
+pytest
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+## 📦 Deployment
+
+### Production Docker Compose
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Individual Services
+```bash
+# Backend only
+docker-compose up backend
+
+# Frontend only
+docker-compose up frontend
+```
+
+## 🔒 Security Features
+
+- JWT-based authentication
+- Password hashing with bcrypt
+- CORS configuration
+- Environment-based configuration
+- Input validation with Pydantic
+
+## 🚧 Development Roadmap
+
+- [ ] AI-powered letter suggestions
+- [ ] Letter templates
+- [ ] User preferences
+- [ ] Letter sharing
+- [ ] Export functionality
+- [ ] Mobile app
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests
+5. Submit a pull request
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+## 🆘 Support
+
+For support and questions:
+- Create an issue in the repository
+- Check the API documentation at `/docs`
+- Review the code examples in the `examples/` directory
