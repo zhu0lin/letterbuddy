@@ -171,7 +171,7 @@ export default function DashboardPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                 </svg>
               </div>
-              <p className="text-gray-500 mb-4">You haven't uploaded any handwriting samples yet.</p>
+              <p className="text-gray-500 mb-4">You haven&apos;t uploaded any handwriting samples yet.</p>
               <Link href="/upload">
                 <Button>Take Your First Assessment</Button>
               </Link>
@@ -235,8 +235,9 @@ export default function DashboardPage() {
           <div className="p-6 text-center">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Ready to Improve?</h2>
             <p className="text-gray-600 mb-6">
-              Take a photo of your handwriting and upload it for AI analysis. 
-              Get personalized feedback and practice recommendations.
+              Master beautiful, legible handwriting with AI-powered photo analysis. 
+              Perfect for iPad, Apple Pencil, and drawing tablets. 
+              Upload photos of your writing and get personalized feedback to improve.
             </p>
             <div className="flex justify-center space-x-4">
               <Link href="/upload">

@@ -5,6 +5,7 @@ import { Button, Card } from '@/components/ui';
 import { useAuth } from '@/context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function UploadPage() {
   const { isAuthenticated } = useAuth();
@@ -138,9 +139,11 @@ export default function UploadPage() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview</h3>
                 <div className="max-w-md mx-auto">
-                  <img
+                  <Image
                     src={preview}
                     alt="Handwriting preview"
+                    width={400}
+                    height={300}
                     className="w-full h-auto rounded-lg border border-gray-200 shadow-sm"
                   />
                 </div>
