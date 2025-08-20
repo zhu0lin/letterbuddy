@@ -16,6 +16,7 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
+  const [submitSuccess, setSubmitSuccess] = useState('');
   const { register } = useAuth();
 
   const validateForm = () => {
@@ -50,16 +51,34 @@ export default function SignupPage() {
     
     setIsLoading(true);
     setSubmitError('');
+    setSubmitSuccess('');
     
     try {
-      await register({
+      const result = await register({
         name: `${formData.firstName} ${formData.lastName}`,
         email: formData.email,
         password: formData.password
       });
-      // Redirect is handled automatically in the auth context
+      
+      if (result && result.success) {
+        setSubmitSuccess(result.message);
+        setSubmitError('');
+        
+        if (result.requiresConfirmation) {
+          // Clear form and show success message
+          setFormData({
+            firstName: '',
+            lastName: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+          });
+        }
+      }
     } catch (error) {
-      setSubmitError('Registration failed. Please try again.');
+      console.error('Registration error:', error);
+      setSubmitError(error.message || 'Registration failed. Please try again.');
+    } finally {
       setIsLoading(false);
     }
   };
@@ -97,6 +116,20 @@ export default function SignupPage() {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <Card>
           <form onSubmit={handleSubmit} className="space-y-6">
+            {submitSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                <p className="text-sm text-green-600">{submitSuccess}</p>
+                {submitSuccess.includes('check your email') && (
+                  <div className="mt-3 flex items-center justify-between">
+                    <span className="text-xs text-green-500">Check your email for confirmation</span>
+                    <Link href="/login" className="text-sm text-blue-600 hover:text-blue-500 font-medium">
+                      Go to login →
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
+            
             {submitError && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4">
                 <p className="text-sm text-red-600">{submitError}</p>

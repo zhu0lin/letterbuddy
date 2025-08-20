@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, LoadingSpinner, EmptyState } from '@/components/ui';
 import { useRouter } from 'next/navigation';
+import WelcomeMessage from '@/components/ui/WelcomeMessage';
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
@@ -17,28 +18,38 @@ export default function DashboardPage() {
       return;
     }
 
-    // Simulate loading user's letters
-    setTimeout(() => {
-      setLetters([
-        {
-          id: 1,
-          title: 'Thank You Letter to Grandma',
-          recipient: 'Grandma Smith',
-          type: 'personal',
-          status: 'draft',
-          createdAt: new Date('2024-01-15')
-        },
-        {
-          id: 2,
-          title: 'Job Application Follow-up',
-          recipient: 'Hiring Manager',
-          type: 'business',
-          status: 'sent',
-          createdAt: new Date('2024-01-10')
-        }
-      ]);
-      setIsLoading(false);
-    }, 1000);
+    // Load user's letters (simulated for now)
+    const loadLetters = async () => {
+      try {
+        // Simulate API call delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        setLetters([
+          {
+            id: 1,
+            title: 'Thank You Letter to Grandma',
+            recipient: 'Grandma Smith',
+            type: 'personal',
+            status: 'draft',
+            createdAt: new Date('2024-01-15')
+          },
+          {
+            id: 2,
+            title: 'Job Application Follow-up',
+            recipient: 'Hiring Manager',
+            type: 'business',
+            status: 'sent',
+            createdAt: new Date('2024-01-10')
+          }
+        ]);
+      } catch (error) {
+        console.error('Error loading letters:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadLetters();
   }, [isAuthenticated, router]);
 
   if (!isAuthenticated) {
@@ -48,10 +59,7 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading your dashboard...</p>
-        </div>
+        <LoadingSpinner size="xl" text="Loading your dashboard..." />
       </div>
     );
   }
@@ -61,10 +69,7 @@ export default function DashboardPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600 mt-2">
-            Welcome back, {user?.name}! Here's an overview of your letters.
-          </p>
+          <WelcomeMessage user={user} />
         </div>
 
         {/* Stats Cards */}
@@ -109,10 +114,12 @@ export default function DashboardPage() {
           </div>
           
           {letters.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-500 mb-4">You haven't created any letters yet.</p>
-              <Button>Write Your First Letter</Button>
-            </div>
+            <EmptyState
+              title="No letters yet"
+              description="You haven't created any letters yet. Start writing your first letter today!"
+              actionText="Write Your First Letter"
+              onAction={() => console.log('Create letter clicked')}
+            />
           ) : (
             <div className="space-y-4">
               {letters.map((letter) => (

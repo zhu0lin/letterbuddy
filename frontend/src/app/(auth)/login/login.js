@@ -23,7 +23,25 @@ export default function LoginPage() {
       await login(formData);
       // Redirect is handled automatically in the auth context
     } catch (error) {
-      setError('Login failed. Please check your credentials and try again.');
+      console.error('Login error:', error);
+      
+      // Provide user-friendly error messages
+      let userMessage = 'Login failed. Please check your credentials and try again.';
+      
+      if (error.message) {
+        if (error.message.includes('Invalid login credentials')) {
+          userMessage = 'Invalid email or password. Please check your credentials and try again.';
+        } else if (error.message.includes('Email not confirmed')) {
+          userMessage = 'Please check your email and confirm your account before signing in.';
+        } else if (error.message.includes('User not found')) {
+          userMessage = 'No account found with this email. Please check your email or create a new account.';
+        } else {
+          userMessage = error.message;
+        }
+      }
+      
+      setError(userMessage);
+    } finally {
       setIsLoading(false);
     }
   };
@@ -34,6 +52,11 @@ export default function LoginPage() {
       ...prev,
       [name]: value
     }));
+    
+    // Clear error when user starts typing
+    if (error) {
+      setError('');
+    }
   };
 
   return (
@@ -56,6 +79,18 @@ export default function LoginPage() {
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4">
                 <p className="text-sm text-red-600">{error}</p>
+                {(error.includes('No account found') || error.includes('User not found')) && (
+                  <div className="mt-2">
+                    <Link href="/signup" className="text-sm text-blue-600 hover:text-blue-500 font-medium">
+                      Create a new account →
+                    </Link>
+                  </div>
+                )}
+                {error.includes('Email not confirmed') && (
+                  <div className="mt-2">
+                    <p className="text-xs text-red-500">Check your email for the confirmation link</p>
+                  </div>
+                )}
               </div>
             )}
             
@@ -109,9 +144,9 @@ export default function LoginPage() {
               </div>
 
               <div className="text-sm">
-                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+                <Link href="/forgot-password" className="font-medium text-blue-600 hover:text-blue-500">
                   Forgot your password?
-                </a>
+                </Link>
               </div>
             </div>
 
