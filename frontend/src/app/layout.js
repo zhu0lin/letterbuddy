@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "LetterBuddy - Your AI Letter Writing Assistant",
-  description: "Create beautiful, personalized letters with the help of AI",
+  title: "LetterBuddy - Transform Your Handwriting with AI",
+  description: "Master beautiful, legible handwriting with AI-powered photo analysis. Perfect for iPad, Apple Pencil, and drawing tablets.",
 };
 
 export default function RootLayout({ children }) {
