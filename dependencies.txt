@@ -1,0 +1,14 @@
+Acronyms
+OCR: Optical Character Recognition
+
+
+
+openCV: pip install openCV
+
+teserract: https://github.com/UB-Mannheim/tesseract/wiki
+Must add folder location to PATH!
+
+
+
+tensorflow (pip install)
+tensorflow-datasets (pip install)
