@@ -63,17 +63,32 @@ export default function UploadPage() {
         throw new Error('File size exceeds 10MB limit');
       }
 
-      // Convert file to base64 for storage in database instead of Supabase Storage
-      const base64Data = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-      });
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
 
-      return base64Data;
+      console.log('Uploading to path:', filePath);
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('handwriting-samples')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload successful:', data);
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('handwriting-samples')
+        .getPublicUrl(filePath);
+
+      console.log('Public URL:', urlData.publicUrl);
+      return urlData.publicUrl;
     } catch (error) {
-      console.error('Error processing image:', error);
+      console.error('Error uploading image:', error);
       throw error;
     }
   };
@@ -97,24 +112,21 @@ export default function UploadPage() {
     }, 200);
 
     try {
-      // Process image to base64
-      const imageData = await uploadImageToStorage(selectedFile);
+      // Upload image to Supabase Storage
+      const imageUrl = await uploadImageToStorage(selectedFile);
       
       clearInterval(interval);
       setUploadProgress(100);
       
       // Add the new handwriting sample to the database
-      const newSample = {
+      await addHandwritingSample({
         type: 'New Assessment',
         focus: 'Overall handwriting analysis',
         score: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
         feedback: 'Good letter formation, needs work on spacing and consistency',
         status: 'analyzed',
-        image: imageData
-      };
-      
-      console.log('Adding to database:', newSample);
-      await addHandwritingSample(newSample);
+        image: imageUrl
+      });
       
       // Redirect to dashboard after successful upload
       setTimeout(() => {
@@ -192,13 +204,15 @@ export default function UploadPage() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview</h3>
                 <div className="max-w-md mx-auto">
-                  <Image
-                    src={preview}
-                    alt="Handwriting preview"
-                    width={400}
-                    height={300}
-                    className="w-full h-auto rounded-lg border border-gray-200 shadow-sm"
-                  />
+                  {preview && (
+                    <Image
+                      src={preview}
+                      alt="Handwriting preview"
+                      width={400}
+                      height={300}
+                      className="w-full h-auto rounded-lg border border-gray-200 shadow-sm"
+                    />
+                  )}
                 </div>
                 <div className="mt-4">
                   <p className="text-sm text-gray-600">
