@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAuth } from '@/context';
+import { useAuth, useHandwriting } from '@/context';
 import { Button, Card, LoadingSpinner, EmptyState } from '@/components/ui';
 import { useRouter } from 'next/navigation';
 import WelcomeMessage from '@/components/ui/WelcomeMessage';
@@ -9,8 +9,8 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
+  const { handwritingSamples } = useHandwriting();
   const router = useRouter();
-  const [handwritingSamples, setHandwritingSamples] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -19,52 +19,10 @@ export default function DashboardPage() {
       return;
     }
 
-    // Load user's letters (simulated for now)
-    const loadLetters = async () => {
-      try {
-        // Simulate API call delay
-        await new Promise(resolve => setTimeout(resolve, 800));
-      } catch (error) {
-        console.error('Error loading letters:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    loadLetters();
-    // Simulate loading user's handwriting samples
+    // Simulate loading delay
     setTimeout(() => {
-      setHandwritingSamples([
-        {
-          id: 1,
-          type: 'Initial Assessment',
-          focus: 'Overall handwriting analysis',
-          score: 72,
-          feedback: 'Good letter formation, needs work on spacing',
-          uploadedAt: new Date('2024-01-15'),
-          status: 'analyzed'
-        },
-        {
-          id: 2,
-          type: 'Spacing Practice',
-          focus: 'Word and letter spacing',
-          score: 78,
-          feedback: 'Improved spacing, letter sizing could be better',
-          uploadedAt: new Date('2024-01-14'),
-          status: 'analyzed'
-        },
-        {
-          id: 3,
-          type: 'Cursive Introduction',
-          focus: 'Basic cursive strokes',
-          score: 85,
-          feedback: 'Excellent progress on cursive basics',
-          uploadedAt: new Date('2024-01-13'),
-          status: 'analyzed'
-        }
-      ]);
       setIsLoading(false);
-    }, 1000);
+    }, 800);  
   }, [isAuthenticated, router]);
 
   if (!isAuthenticated) {
@@ -149,7 +107,9 @@ export default function DashboardPage() {
           <Card className="bg-white shadow-md">
             <div className="text-center p-4">
               <p className="text-3xl font-bold text-green-600">
-                {Math.round(handwritingSamples.reduce((acc, sample) => acc + sample.score, 0) / handwritingSamples.length)}%
+                {handwritingSamples.length > 0 
+                  ? Math.round(handwritingSamples.reduce((acc, sample) => acc + sample.score, 0) / handwritingSamples.length)
+                  : 0}%
               </p>
               <p className="text-gray-600">Average Score</p>
             </div>
@@ -200,17 +160,28 @@ export default function DashboardPage() {
                   key={sample.id}
                   className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex-1">
-                    <h3 className="font-medium text-gray-900">{sample.type}</h3>
-                    <p className="text-sm text-gray-600">
-                      Focus: {sample.focus}
-                    </p>
-                    <p className="text-sm text-gray-600 mt-1">
-                      Feedback: {sample.feedback}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Uploaded: {sample.uploadedAt.toLocaleDateString()}
-                    </p>
+                  <div className="flex items-center space-x-4 flex-1">
+                    {sample.image && sample.image.trim() !== '' && (
+                      <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                        <img 
+                          src={sample.image} 
+                          alt="Handwriting sample" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h3 className="font-medium text-gray-900">{sample.type}</h3>
+                      <p className="text-sm text-gray-600">
+                        Focus: {sample.focus}
+                      </p>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Feedback: {sample.feedback}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Uploaded: {sample.uploadedAt.toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
                   <div className="flex items-center space-x-4">
                     <div className="text-right">
@@ -218,7 +189,9 @@ export default function DashboardPage() {
                       <p className="text-xs text-gray-500">Score</p>
                     </div>
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="outline">View Analysis</Button>
+                      <Link href={`/analysis/${sample.id}`}>
+                        <Button size="sm" variant="outline">View Analysis</Button>
+                      </Link>
                       <Button size="sm" variant="outline">Practice</Button>
                     </div>
                   </div>

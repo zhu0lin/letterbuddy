@@ -2,13 +2,14 @@
 
 import { useState, useRef } from 'react';
 import { Button, Card } from '@/components/ui';
-import { useAuth } from '@/context';
+import { useAuth, useHandwriting } from '@/context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 
 export default function UploadPage() {
   const { isAuthenticated } = useAuth();
+  const { addHandwritingSample } = useHandwriting();
   const router = useRouter();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -71,6 +72,18 @@ export default function UploadPage() {
       
       clearInterval(interval);
       setUploadProgress(100);
+      
+      // Add the new handwriting sample to the context
+      addHandwritingSample({
+        id: Date.now(),
+        type: 'New Assessment',
+        focus: 'Overall handwriting analysis',
+        score: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
+        feedback: 'Good letter formation, needs work on spacing and consistency',
+        uploadedAt: new Date(),
+        status: 'analyzed',
+        image: preview // Use the preview image
+      });
       
       // Redirect to dashboard after successful upload
       setTimeout(() => {

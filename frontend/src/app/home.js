@@ -187,7 +187,7 @@ export default function Home() {
           </p>
           <div className="flex justify-center space-x-4">
             <Link href="/signup">
-              <Button size="lg" className="text-lg px-8 py-3 bg-white text-black hover:bg-gray-100">
+              <Button size="lg" className="text-lg px-8 py-3">
                 Start Free Trial
               </Button>
             </Link>
