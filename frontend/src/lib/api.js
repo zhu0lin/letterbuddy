@@ -8,37 +8,58 @@ export const api = {
     const formData = new FormData();
     formData.append('image', imageFile);
 
-    const response = await fetch(`${API_BASE_URL}/handwriting/analyze`, {
-      method: 'POST',
-      body: formData,
-    });
+    try {
+      const response = await fetch(`${API_BASE_URL}/handwriting/analyze`, {
+        method: 'POST',
+        body: formData,
+      });
 
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        throw new Error(`Network Error: Unable to connect to the analysis service. Please check your internet connection and try again. If the problem persists, the service may be temporarily unavailable.`);
+      }
+      throw error;
     }
-
-    return response.json();
   },
 
   // Get demo analysis
   async getDemoAnalysis() {
-    const response = await fetch(`${API_BASE_URL}/handwriting/demo`);
-    
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
-    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/handwriting/demo`);
+      
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
 
-    return response.json();
+      return response.json();
+    } catch (error) {
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        throw new Error(`Network Error: Unable to connect to the analysis service. Please check your internet connection and try again.`);
+      }
+      throw error;
+    }
   },
 
   // Health check
   async healthCheck() {
-    const response = await fetch(`${API_BASE_URL}/health`);
-    
-    if (!response.ok) {
-      throw new Error(`API Error: ${response.status} ${response.statusText}`);
-    }
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`);
+      
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
 
-    return response.json();
+      return response.json();
+    } catch (error) {
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        throw new Error(`Network Error: Unable to connect to the analysis service.`);
+      }
+      throw error;
+    }
   }
 };
