@@ -1,10 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routes import auth, letters, users
+from app.routes import auth, letters, users, handwriting
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = FastAPI(
     title="LetterBuddy API",
-    description="Backend API for LetterBuddy - AI-powered letter writing assistant",
+    description="Backend API for LetterBuddy - AI-powered letter writing assistant with handwriting analysis",
     version="1.0.0"
 )
 
@@ -21,6 +26,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/auth", tags=["authentication"])
 app.include_router(letters.router, prefix="/letters", tags=["letters"])
 app.include_router(users.router, prefix="/users", tags=["users"])
+app.include_router(handwriting.router, prefix="/handwriting", tags=["handwriting analysis"])
 
 @app.get("/")
 async def root():

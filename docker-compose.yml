@@ -27,6 +27,7 @@ services:
       - DATABASE_URL=postgresql://letterbuddy:letterbuddy123@postgres:5432/letterbuddy
       - SECRET_KEY=your-secret-key-here-change-in-production
       - ENVIRONMENT=development
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       postgres:
         condition: service_healthy

@@ -14,6 +14,7 @@ export default function AnalysisPage({ id }) {
   const router = useRouter();
   const [sample, setSample] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [analysisResult, setAnalysisResult] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -26,6 +27,10 @@ export default function AnalysisPage({ id }) {
     if (foundSample) {
       setSample(foundSample);
       setIsLoading(false);
+      // If we have analysis data, use it
+      if (foundSample.analysis) {
+        setAnalysisResult(foundSample.analysis);
+      }
     } else {
       // If sample not found in context, try to fetch from database
       fetchSampleFromDatabase();
@@ -54,9 +59,15 @@ export default function AnalysisPage({ id }) {
           feedback: data.feedback || 'No feedback yet',
           uploadedAt: new Date(data.uploaded_at),
           status: data.status || 'analyzed',
-          image: data.image_url
+          image: data.image_url,
+          analysis: data.analysis || null
         };
         setSample(formattedSample);
+        
+        // If we have analysis data, use it
+        if (data.analysis) {
+          setAnalysisResult(data.analysis);
+        }
       } else {
         // If sample not found, redirect to dashboard
         router.push('/dashboard');
@@ -105,8 +116,10 @@ export default function AnalysisPage({ id }) {
               <p className="text-xl text-gray-600">Detailed feedback and improvement suggestions</p>
             </div>
             <div className="text-right">
-              <p className="text-2xl font-bold text-green-600">{sample.score}%</p>
-              <p className="text-sm text-gray-500">Overall Score</p>
+              <p className="text-2xl font-bold text-green-600">
+                {analysisResult ? Math.round(analysisResult.confidence_score * 100) : sample.score}%
+              </p>
+              <p className="text-sm text-gray-500">Confidence Score</p>
             </div>
           </div>
         </div>
@@ -141,44 +154,52 @@ export default function AnalysisPage({ id }) {
             {/* Overall Feedback */}
             <Card className="bg-white shadow-lg p-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">AI Analysis & Feedback</h2>
+              
+              {/* Detected Letters Section */}
+              {analysisResult && analysisResult.detected_letters && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-3">Detected Letters</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analysisResult.detected_letters.map((letter, index) => (
+                      <span key={index} className="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg text-lg font-mono font-bold border-2 border-blue-200">
+                        {letter}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-sm text-gray-600 mt-2">
+                    AI detected {analysisResult.detected_letters.length} letter{analysisResult.detected_letters.length !== 1 ? 's' : ''} in your handwriting
+                  </p>
+                </div>
+              )}
+
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                <p className="text-blue-800">{sample.feedback}</p>
+                <p className="text-blue-800">
+                  {analysisResult ? analysisResult.analysis : sample.feedback}
+                </p>
               </div>
               
               {/* Score Breakdown */}
               <div className="space-y-3">
-                <h3 className="text-lg font-medium text-gray-900">Score Breakdown</h3>
+                <h3 className="text-lg font-medium text-gray-900">Quality Assessment</h3>
                 <div className="space-y-2">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Letter Formation</span>
-                    <span className="text-sm font-medium text-gray-900">85%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Spacing</span>
-                    <span className="text-sm font-medium text-gray-900">72%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-green-600 h-2 rounded-full" style={{ width: '72%' }}></div>
+                    <span className="text-sm text-gray-600">Handwriting Quality</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {analysisResult ? analysisResult.handwriting_quality : 'Good'}
+                    </span>
                   </div>
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Alignment</span>
-                    <span className="text-sm font-medium text-gray-900">78%</span>
+                    <span className="text-sm text-gray-600">Confidence Score</span>
+                    <span className="text-sm font-medium text-gray-900">
+                      {analysisResult ? Math.round(analysisResult.confidence_score * 100) : 85}%
+                    </span>
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-purple-600 h-2 rounded-full" style={{ width: '78%' }}></div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Neatness</span>
-                    <span className="text-sm font-medium text-gray-900">80%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div className="bg-yellow-600 h-2 rounded-full" style={{ width: '80%' }}></div>
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full" 
+                      style={{ width: `${analysisResult ? Math.round(analysisResult.confidence_score * 100) : 85}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -188,20 +209,33 @@ export default function AnalysisPage({ id }) {
             <Card className="bg-white shadow-lg p-6">
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Improvement Suggestions</h2>
               <div className="space-y-4">
-                <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50">
-                  <h3 className="font-medium text-yellow-900 mb-2">Focus on Spacing</h3>
-                  <p className="text-yellow-800 text-sm">Your letters are well-formed but could benefit from more consistent spacing between words and letters.</p>
-                </div>
-                
-                <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
-                  <h3 className="font-medium text-blue-900 mb-2">Maintain Letter Size</h3>
-                  <p className="text-blue-800 text-sm">Some letters vary in size. Practice maintaining consistent letter heights for better readability.</p>
-                </div>
-                
-                <div className="p-4 border border-green-200 rounded-lg bg-green-50">
-                  <h3 className="font-medium text-green-900 mb-2">Great Progress!</h3>
-                  <p className="text-green-800 text-sm">Your letter formation is excellent. Keep practicing to improve consistency.</p>
-                </div>
+                {analysisResult && analysisResult.suggestions ? (
+                  // Show real AI suggestions
+                  analysisResult.suggestions.map((suggestion, index) => (
+                    <div key={index} className="p-4 border border-blue-200 rounded-lg bg-blue-50">
+                      <h3 className="font-medium text-blue-900 mb-2">Suggestion {index + 1}</h3>
+                      <p className="text-blue-800 text-sm">{suggestion}</p>
+                    </div>
+                  ))
+                ) : (
+                  // Fallback to default suggestions
+                  <>
+                    <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50">
+                      <h3 className="font-medium text-yellow-900 mb-2">Focus on Spacing</h3>
+                      <p className="text-yellow-800 text-sm">Your letters are well-formed but could benefit from more consistent spacing between words and letters.</p>
+                    </div>
+                    
+                    <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
+                      <h3 className="font-medium text-blue-900 mb-2">Maintain Letter Size</h3>
+                      <p className="text-blue-800 text-sm">Some letters vary in size. Practice maintaining consistent letter heights for better readability.</p>
+                    </div>
+                    
+                    <div className="p-4 border border-green-200 rounded-lg bg-green-50">
+                      <h3 className="font-medium text-green-900 mb-2">Great Progress!</h3>
+                      <p className="text-green-800 text-sm">Your letter formation is excellent. Keep practicing to improve consistency.</p>
+                    </div>
+                  </>
+                )}
               </div>
             </Card>
 
