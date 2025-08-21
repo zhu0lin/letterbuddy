@@ -1,6 +1,8 @@
 Acronyms
 OCR: Optical Character Recognition
-
+EMNIST = Extended MNIST: a set of handwritten digits + letters derived
+from NIST SD-19, converted into 28×28 grayscale images. 
+It has multiple splits:
 
 
 openCV: pip install openCV
