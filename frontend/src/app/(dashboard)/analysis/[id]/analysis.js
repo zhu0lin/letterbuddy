@@ -6,6 +6,7 @@ import { Button, Card } from '@/components/ui';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 
 export default function AnalysisPage({ id }) {
   const { user, isAuthenticated } = useAuth();
@@ -24,14 +25,49 @@ export default function AnalysisPage({ id }) {
     const foundSample = handwritingSamples.find(s => s.id.toString() === id);
     if (foundSample) {
       setSample(foundSample);
+      setIsLoading(false);
     } else {
-      // If sample not found, redirect to dashboard
-      router.push('/dashboard');
-      return;
+      // If sample not found in context, try to fetch from database
+      fetchSampleFromDatabase();
     }
-    
-    setIsLoading(false);
   }, [id, handwritingSamples, isAuthenticated, router]);
+
+  const fetchSampleFromDatabase = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_uploads')
+        .select('*')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        const formattedSample = {
+          id: data.id,
+          type: data.type || 'Handwriting Sample',
+          focus: data.focus || 'Overall handwriting',
+          score: data.score || 0,
+          feedback: data.feedback || 'No feedback yet',
+          uploadedAt: new Date(data.uploaded_at),
+          status: data.status || 'analyzed',
+          image: data.image_url
+        };
+        setSample(formattedSample);
+      } else {
+        // If sample not found, redirect to dashboard
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Error fetching sample:', error);
+      router.push('/dashboard');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!isAuthenticated) {
     return null;

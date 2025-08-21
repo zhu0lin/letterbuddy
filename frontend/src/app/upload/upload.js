@@ -6,15 +6,17 @@ import { useAuth, useHandwriting } from '@/context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
+import { supabase } from '@/lib/supabase';
 
 export default function UploadPage() {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { addHandwritingSample } = useHandwriting();
   const router = useRouter();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
   // Redirect if not authenticated
@@ -26,11 +28,14 @@ export default function UploadPage() {
   const handleFileSelect = (file) => {
     if (file && file.type.startsWith('image/')) {
       setSelectedFile(file);
+      setError(null);
       
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => setPreview(e.target.result);
       reader.readAsDataURL(file);
+    } else {
+      setError('Please select a valid image file (JPG, PNG, GIF)');
     }
   };
 
@@ -49,11 +54,51 @@ export default function UploadPage() {
     handleFileSelect(file);
   };
 
+  const uploadImageToStorage = async (file) => {
+    try {
+      console.log('Starting upload for user:', user.id);
+      
+      // Check if file size is too large (10MB limit)
+      if (file.size > 10 * 1024 * 1024) {
+        throw new Error('File size exceeds 10MB limit');
+      }
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Math.random()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      console.log('Uploading to path:', filePath);
+
+      const { data, error: uploadError } = await supabase.storage
+        .from('handwriting-samples')
+        .upload(filePath, file);
+
+      if (uploadError) {
+        console.error('Upload error:', uploadError);
+        throw uploadError;
+      }
+
+      console.log('Upload successful:', data);
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('handwriting-samples')
+        .getPublicUrl(filePath);
+
+      console.log('Public URL:', urlData.publicUrl);
+      return urlData.publicUrl;
+    } catch (error) {
+      console.error('Error uploading image:', error);
+      throw error;
+    }
+  };
+
   const handleUpload = async () => {
     if (!selectedFile) return;
 
     setIsUploading(true);
     setUploadProgress(0);
+    setError(null);
 
     // Simulate upload progress
     const interval = setInterval(() => {
@@ -67,23 +112,24 @@ export default function UploadPage() {
     }, 200);
 
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Upload image to Supabase Storage
+      const imageUrl = await uploadImageToStorage(selectedFile);
       
       clearInterval(interval);
       setUploadProgress(100);
       
-      // Add the new handwriting sample to the context
-      addHandwritingSample({
-        id: Date.now(),
+      // Add the new handwriting sample to the database
+      const newSample = {
         type: 'New Assessment',
         focus: 'Overall handwriting analysis',
         score: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
         feedback: 'Good letter formation, needs work on spacing and consistency',
-        uploadedAt: new Date(),
         status: 'analyzed',
-        image: preview // Use the preview image
-      });
+        image: imageUrl
+      };
+      
+      console.log('Adding to database:', newSample);
+      await addHandwritingSample(newSample);
       
       // Redirect to dashboard after successful upload
       setTimeout(() => {
@@ -92,6 +138,7 @@ export default function UploadPage() {
       
     } catch (error) {
       console.error('Upload failed:', error);
+      setError(error.message || 'Upload failed. Please try again.');
       setIsUploading(false);
       setUploadProgress(0);
     }
@@ -100,6 +147,7 @@ export default function UploadPage() {
   const removeFile = () => {
     setSelectedFile(null);
     setPreview(null);
+    setError(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -148,6 +196,13 @@ export default function UploadPage() {
             </div>
           ) : (
             <div className="space-y-6">
+              {/* Error Message */}
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                  <p className="text-red-800">{error}</p>
+                </div>
+              )}
+
               {/* File Preview */}
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview</h3>

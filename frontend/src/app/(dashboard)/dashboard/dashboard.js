@@ -9,9 +9,9 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   const { user, isAuthenticated } = useAuth();
-  const { handwritingSamples } = useHandwriting();
+  const { handwritingSamples, isLoading } = useHandwriting();
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -19,17 +19,17 @@ export default function DashboardPage() {
       return;
     }
 
-    // Simulate loading delay
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 800);  
-  }, [isAuthenticated, router]);
+    // Wait for samples to load
+    if (!isLoading) {
+      setIsInitialLoading(false);
+    }
+  }, [isAuthenticated, router, isLoading]);
 
   if (!isAuthenticated) {
     return null;
   }
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
