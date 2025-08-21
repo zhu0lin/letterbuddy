@@ -63,32 +63,17 @@ export default function UploadPage() {
         throw new Error('File size exceeds 10MB limit');
       }
 
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
+      // Convert file to base64 for storage in database instead of Supabase Storage
+      const base64Data = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
 
-      console.log('Uploading to path:', filePath);
-
-      const { data, error: uploadError } = await supabase.storage
-        .from('handwriting-samples')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      console.log('Upload successful:', data);
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('handwriting-samples')
-        .getPublicUrl(filePath);
-
-      console.log('Public URL:', urlData.publicUrl);
-      return urlData.publicUrl;
+      return base64Data;
     } catch (error) {
-      console.error('Error uploading image:', error);
+      console.error('Error processing image:', error);
       throw error;
     }
   };
@@ -112,8 +97,8 @@ export default function UploadPage() {
     }, 200);
 
     try {
-      // Upload image to Supabase Storage
-      const imageUrl = await uploadImageToStorage(selectedFile);
+      // Process image to base64
+      const imageData = await uploadImageToStorage(selectedFile);
       
       clearInterval(interval);
       setUploadProgress(100);
@@ -125,7 +110,7 @@ export default function UploadPage() {
         score: Math.floor(Math.random() * 30) + 70, // Random score between 70-100
         feedback: 'Good letter formation, needs work on spacing and consistency',
         status: 'analyzed',
-        image: imageUrl
+        image: imageData
       };
       
       console.log('Adding to database:', newSample);
