@@ -1,4 +1,4 @@
-# LetterBuddy Backend
+# LetterBuddy Backend Deployed on Railway
 
 A simplified FastAPI backend for the LetterBuddy application.
 
