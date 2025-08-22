@@ -1,15 +1,19 @@
 'use client';
 
+
 import { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context';
 
+
 const HandwritingContext = createContext();
+
 
 export function HandwritingProvider({ children }) {
   const [handwritingSamples, setHandwritingSamples] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const { user } = useAuth();
+
 
   // Fetch user's handwriting samples
   useEffect(() => {
@@ -20,23 +24,27 @@ export function HandwritingProvider({ children }) {
     }
   }, [user]);
 
+
   const fetchHandwritingSamples = async () => {
     try {
       setIsLoading(true);
       console.log('Fetching samples for user:', user.id);
-      
+     
       const { data, error } = await supabase
         .from('user_uploads')
         .select('*')
         .eq('user_id', user.id)
         .order('uploaded_at', { ascending: false });
 
+
       if (error) {
         console.error('Error fetching samples:', error);
         throw error;
       }
 
+
       console.log('Fetched samples:', data);
+
 
       // Transform data to match the expected format
       const samples = data.map(item => ({
@@ -47,8 +55,10 @@ export function HandwritingProvider({ children }) {
         feedback: item.feedback || 'No feedback yet',
         uploadedAt: new Date(item.uploaded_at),
         status: item.status || 'analyzed',
-        image: item.image_url
+        image: item.image_url,
+        analysis: item.analysis || null
       }));
+
 
       setHandwritingSamples(samples);
     } catch (error) {
@@ -58,10 +68,11 @@ export function HandwritingProvider({ children }) {
     }
   };
 
+
   const addHandwritingSample = async (newSample) => {
     try {
       console.log('Adding sample to database:', newSample);
-      
+     
       // Insert into Supabase
       const { data, error } = await supabase
         .from('user_uploads')
@@ -73,17 +84,21 @@ export function HandwritingProvider({ children }) {
             focus: newSample.focus,
             score: newSample.score,
             feedback: newSample.feedback,
-            status: newSample.status
+            status: newSample.status,
+            analysis: newSample.analysis
           }
         ])
         .select();
+
 
       if (error) {
         console.error('Error inserting sample:', error);
         throw error;
       }
 
+
       console.log('Inserted sample:', data);
+
 
       // Update local state with the returned data
       if (data && data.length > 0) {
@@ -96,9 +111,10 @@ export function HandwritingProvider({ children }) {
           feedback: insertedSample.feedback || 'No feedback yet',
           uploadedAt: new Date(insertedSample.uploaded_at),
           status: insertedSample.status || 'analyzed',
-          image: insertedSample.image_url
+          image: insertedSample.image_url,
+          analysis: insertedSample.analysis || null
         };
-        
+       
         setHandwritingSamples(prev => [formattedSample, ...prev]);
         return formattedSample;
       }
@@ -108,12 +124,14 @@ export function HandwritingProvider({ children }) {
     }
   };
 
+
   const value = {
     handwritingSamples,
     isLoading,
     addHandwritingSample,
     refreshSamples: fetchHandwritingSamples
   };
+
 
   return (
     <HandwritingContext.Provider value={value}>
@@ -122,6 +140,7 @@ export function HandwritingProvider({ children }) {
   );
 }
 
+
 export function useHandwriting() {
   const context = useContext(HandwritingContext);
   if (!context) {
@@ -129,3 +148,4 @@ export function useHandwriting() {
   }
   return context;
 }
+

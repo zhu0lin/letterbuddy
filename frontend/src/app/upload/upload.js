@@ -1,15 +1,18 @@
 'use client';
 
+
 import { useState, useRef } from 'react';
 import { Button, Card } from '@/components/ui';
-import { useAuth } from '@/context';
+import { useAuth, useHandwriting } from '@/context';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { api } from '@/lib/api';
 
+
 export default function UploadPage() {
   const { isAuthenticated } = useAuth();
+  const { addHandwritingSample } = useHandwriting();
   const router = useRouter();
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -19,18 +22,20 @@ export default function UploadPage() {
   const [error, setError] = useState(null);
   const fileInputRef = useRef(null);
 
+
   // Redirect if not authenticated
   if (!isAuthenticated) {
     router.push('/login');
     return null;
   }
 
+
   const handleFileSelect = (file) => {
     if (file && file.type.startsWith('image/')) {
       setSelectedFile(file);
       setAnalysisResult(null);
       setError(null);
-      
+     
       // Create preview
       const reader = new FileReader();
       reader.onload = (e) => setPreview(e.target.result);
@@ -38,28 +43,34 @@ export default function UploadPage() {
     }
   };
 
+
   const handleDrop = (e) => {
     e.preventDefault();
     const file = e.dataTransfer.files[0];
     handleFileSelect(file);
   };
 
+
   const handleDragOver = (e) => {
     e.preventDefault();
   };
+
 
   const handleFileInputChange = (e) => {
     const file = e.target.files[0];
     handleFileSelect(file);
   };
 
+
   const handleUpload = async () => {
     if (!selectedFile) return;
+
 
     setIsUploading(true);
     setUploadProgress(0);
     setError(null);
     setAnalysisResult(null);
+
 
     // Simulate upload progress
     const interval = setInterval(() => {
@@ -72,19 +83,31 @@ export default function UploadPage() {
       });
     }, 200);
 
+
     try {
       // Call the backend handwriting analysis API using the utility
       const result = await api.analyzeHandwriting(selectedFile);
-      
+     
       clearInterval(interval);
       setUploadProgress(100);
       setAnalysisResult(result);
-      
+     
+      // Save to Supabase
+      await addHandwritingSample({
+        type: 'Handwriting Analysis',
+        focus: 'AI Analysis',
+        score: Math.round(result.confidence_score * 100),
+        feedback: result.analysis,
+        status: 'analyzed',
+        image: preview,
+        analysis: result
+      });
+     
       // Show success message
       setTimeout(() => {
         setUploadProgress(0);
       }, 2000);
-      
+     
     } catch (error) {
       console.error('Upload failed:', error);
       setError(error.message || 'Failed to analyze handwriting. Please try again.');
@@ -94,6 +117,7 @@ export default function UploadPage() {
       setIsUploading(false);
     }
   };
+
 
   const removeFile = () => {
     setSelectedFile(null);
@@ -105,10 +129,12 @@ export default function UploadPage() {
     }
   };
 
+
   const resetAnalysis = () => {
     setAnalysisResult(null);
     setError(null);
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
@@ -117,10 +143,11 @@ export default function UploadPage() {
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Upload Handwriting Sample</h1>
           <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Take a photo of your handwriting and upload it for AI analysis. 
+            Take a photo of your handwriting and upload it for AI analysis.
             Get detailed feedback on spacing, sizing, alignment, and overall neatness.
           </p>
         </div>
+
 
         {/* Upload Area */}
         <Card className="bg-white shadow-lg p-8">
@@ -157,13 +184,15 @@ export default function UploadPage() {
               <div className="text-center">
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">Preview</h3>
                 <div className="max-w-md mx-auto">
-                  <Image
-                    src={preview}
-                    alt="Handwriting preview"
-                    width={400}
-                    height={300}
-                    className="w-full h-auto rounded-lg border border-gray-200 shadow-sm"
-                  />
+                  {preview && (
+                    <Image
+                      src={preview}
+                      alt="Handwriting preview"
+                      width={400}
+                      height={300}
+                      className="w-full h-auto rounded-lg border border-gray-200 shadow-sm"
+                    />
+                  )}
                 </div>
                 <div className="mt-4">
                   <p className="text-sm text-gray-600">
@@ -174,6 +203,7 @@ export default function UploadPage() {
                   </p>
                 </div>
               </div>
+
 
               {/* Error Display */}
               {error && (
@@ -192,11 +222,12 @@ export default function UploadPage() {
                 </div>
               )}
 
+
               {/* Analysis Results */}
               {analysisResult && (
                 <div className="bg-green-50 border border-green-200 rounded-lg p-6">
                   <h3 className="text-lg font-semibold text-green-800 mb-6">Handwriting Analysis Results</h3>
-                  
+                 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                     <div className="bg-white rounded-lg p-4 border border-green-200">
                       <h4 className="font-medium text-green-700 mb-3">Detected Letters</h4>
@@ -208,7 +239,7 @@ export default function UploadPage() {
                         ))}
                       </div>
                     </div>
-                    
+                   
                     <div className="bg-white rounded-lg p-4 border border-green-200">
                       <h4 className="font-medium text-green-700 mb-3">Quality Assessment</h4>
                       <div className="space-y-2">
@@ -217,6 +248,7 @@ export default function UploadPage() {
                       </div>
                     </div>
                   </div>
+
 
                   <div className="mb-6">
                     <h4 className="font-medium text-green-700 mb-3">Suggestions for Improvement</h4>
@@ -232,31 +264,32 @@ export default function UploadPage() {
                     </div>
                   </div>
 
+
                   <div>
                     <h4 className="font-medium text-green-700 mb-3">Detailed Analysis</h4>
                     <div className="bg-white rounded-lg p-4 border border-green-200">
                       {(() => {
                         const analysis = analysisResult.analysis;
-                        
+                       
                         // Check if the analysis follows the structured format
                         if (analysis.includes('DETECTED_LETTERS:') && analysis.includes('QUALITY:') && analysis.includes('CONFIDENCE:') && analysis.includes('SUGGESTIONS:') && analysis.includes('ANALYSIS:')) {
                           // Parse structured format
                           const sections = analysis.split(/(?=DETECTED_LETTERS:|QUALITY:|CONFIDENCE:|SUGGESTIONS:|ANALYSIS:)/);
-                          
+                         
                           return (
                             <div className="space-y-4">
                               {sections.map((section, index) => {
                                 if (!section.trim()) return null;
-                                
+                               
                                 const [header, ...content] = section.split('\n');
                                 const title = header.replace(':', '');
                                 const text = content.join('\n').trim();
-                                
+                               
                                 if (!text) return null;
-                                
+                               
                                 // Split the content by line breaks and filter out empty lines
                                 const lines = text.split('\n').filter(line => line.trim());
-                                
+                               
                                 return (
                                   <div key={index} className="border-b border-gray-100 pb-3 last:border-b-0">
                                     <h5 className="font-semibold text-gray-800 mb-2 text-base">{title}</h5>
@@ -275,7 +308,7 @@ export default function UploadPage() {
                         } else {
                           // Fallback for non-structured format - also split by lines
                           const lines = analysis.split('\n').filter(line => line.trim());
-                          
+                         
                           return (
                             <div className="space-y-2">
                               {lines.map((line, index) => (
@@ -291,6 +324,7 @@ export default function UploadPage() {
                   </div>
                 </div>
               )}
+
 
               {/* Upload Progress */}
               {isUploading && (
@@ -313,6 +347,7 @@ export default function UploadPage() {
                 </div>
               )}
 
+
               {/* Action Buttons */}
               <div className="flex justify-center space-x-4">
                 {!isUploading && !analysisResult && (
@@ -333,7 +368,7 @@ export default function UploadPage() {
                     </Button>
                   </>
                 )}
-                
+               
                 {analysisResult && (
                   <>
                     <Button
@@ -356,6 +391,7 @@ export default function UploadPage() {
             </div>
           )}
         </Card>
+
 
         {/* Tips Section */}
         <Card className="bg-white shadow-lg mt-8 p-6">
@@ -392,6 +428,7 @@ export default function UploadPage() {
           </div>
         </Card>
 
+
         {/* Back to Dashboard */}
         <div className="text-center mt-8">
           <Link href="/dashboard">
@@ -404,3 +441,4 @@ export default function UploadPage() {
     </div>
   );
 }
+
