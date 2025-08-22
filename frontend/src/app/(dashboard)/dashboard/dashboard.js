@@ -12,6 +12,7 @@ export default function DashboardPage() {
   const { handwritingSamples, isLoading } = useHandwriting();
   const router = useRouter();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [allImprovementLetters, setAllImprovementLetters] = useState([]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -22,11 +23,21 @@ export default function DashboardPage() {
     // Wait for samples to load
     if (!isLoading) {
       setIsInitialLoading(false);
+      
+      // Extract all unique improvement letters from all samples
+      const improvements = [];
+      handwritingSamples.forEach(sample => {
+        if (sample.improvementLetters && Array.isArray(sample.improvementLetters)) {
+          sample.improvementLetters.forEach(letter => {
+            if (!improvements.includes(letter)) {
+              improvements.push(letter);
+            }
+          });
+        }
+      });
+      setAllImprovementLetters(improvements);
     }
-  }, [isAuthenticated, router, isLoading]);
-
-  // Get all samples that need practice
-  const needsPracticeSamples = handwritingSamples.filter(s => s.score < 75);
+  }, [isAuthenticated, router, isLoading, handwritingSamples]);
 
   if (!isAuthenticated) {
     return null;
@@ -74,7 +85,10 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/practice">
+          <Link href={{
+            pathname: "/practice",
+            query: { improvementLetters: allImprovementLetters.join(',') }
+          }}>
             <Card className="border-2 border-green-200 hover:border-green-300 transition-colors cursor-pointer">
               <div className="text-center p-6">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -83,7 +97,7 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Practice Exercises</h3>
-                <p className="text-gray-600 text-sm">Get personalized practice based on feedback</p>
+                <p className="text-gray-600 text-sm">Practice all letters needing improvement</p>
               </div>
             </Card>
           </Link>
@@ -130,9 +144,9 @@ export default function DashboardPage() {
           <Card className="bg-white shadow-md">
             <div className="text-center p-4">
               <p className="text-3xl font-bold text-yellow-600">
-                {needsPracticeSamples.length}
+                {allImprovementLetters.length}
               </p>
-              <p className="text-gray-600">Need Practice</p>
+              <p className="text-gray-600">Letters to Improve</p>
             </div>
           </Card>
         </div>
@@ -181,7 +195,7 @@ export default function DashboardPage() {
                         Focus: {sample.focus}
                       </p>
                       <p className="text-sm text-gray-600 mt-1">
-                        Feedback: {sample.feedback}
+                        Letters to improve: {sample.improvementLetters ? sample.improvementLetters.join(', ') : 'None identified'}
                       </p>
                       <p className="text-xs text-gray-500 mt-2">
                         Uploaded: {sample.uploadedAt.toLocaleDateString()}
@@ -197,7 +211,10 @@ export default function DashboardPage() {
                       <Link href={`/analysis/${sample.id}`}>
                         <Button size="sm" variant="outline">View Analysis</Button>
                       </Link>
-                      <Link href={`/practice?sampleId=${sample.id}&allNeedsPractice=true`}>
+                      <Link href={{
+                        pathname: "/practice",
+                        query: { improvementLetters: sample.improvementLetters ? sample.improvementLetters.join(',') : '' }
+                      }}>
                         <Button size="sm" variant="outline">Practice</Button>
                       </Link>
                     </div>
@@ -209,27 +226,29 @@ export default function DashboardPage() {
         </Card>
 
         {/* Practice Recommendations */}
-        <Card className="bg-white shadow-md mt-8">
-          <div className="p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Recommended Next Steps</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
-                <h3 className="font-medium text-blue-900 mb-2">Improve Letter Sizing</h3>
-                <p className="text-blue-700 text-sm">Your letters vary in size. Try our sizing consistency exercises.</p>
-                <Link href="/practice?focus=sizing&allNeedsPractice=true">
-                  <Button size="sm" className="mt-2" variant="outline">Practice Sizing</Button>
-                </Link>
+        {allImprovementLetters.length > 0 && (
+          <Card className="bg-white shadow-md mt-8">
+            <div className="p-6">
+              <h2 className="text-xl font-semibold text-gray-900 mb-4">Recommended Practice</h2>
+              <div className="mb-4">
+                <h3 className="font-medium text-gray-900 mb-2">All Letters Needing Improvement:</h3>
+                <div className="flex flex-wrap gap-2">
+                  {allImprovementLetters.map((letter, index) => (
+                    <span key={index} className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                      {letter}
+                    </span>
+                  ))}
+                </div>
               </div>
-              <div className="p-4 border border-green-200 rounded-lg bg-green-50">
-                <h3 className="font-medium text-green-900 mb-2">Master Cursive</h3>
-                <p className="text-green-700 text-sm">Great job on basic strokes! Ready for more advanced cursive.</p>
-                <Link href="/practice?focus=cursive&allNeedsPractice=true">
-                  <Button size="sm" className="mt-2" variant="outline">Continue Cursive</Button>
-                </Link>
-              </div>
+              <Link href={{
+                pathname: "/practice",
+                query: { improvementLetters: allImprovementLetters.join(',') }
+              }}>
+                <Button>Practice All Letters</Button>
+              </Link>
             </div>
-          </div>
-        </Card>
+          </Card>
+        )}
 
         {/* Upload Section */}
         <Card className="bg-white shadow-md mt-8">
@@ -246,7 +265,10 @@ export default function DashboardPage() {
                   Upload Handwriting Sample
                 </Button>
               </Link>
-              <Link href="/practice?allNeedsPractice=true">
+              <Link href={{
+                pathname: "/practice",
+                query: { improvementLetters: allImprovementLetters.join(',') }
+              }}>
                 <Button size="lg" variant="outline">
                   View Practice Exercises
                 </Button>
