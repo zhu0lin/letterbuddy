@@ -61,5 +61,33 @@ export const api = {
       }
       throw error;
     }
+  },
+
+  // Generate practice sentences
+  async generatePracticeSentences(targetLetter, difficulty = 'beginner', sentenceCount = 5) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/handwriting/practice-sentences`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          target_letter: targetLetter,
+          difficulty: difficulty,
+          sentence_count: sentenceCount
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+
+      return response.json();
+    } catch (error) {
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        throw new Error(`Network Error: Unable to connect to the practice service. Please check your internet connection and try again.`);
+      }
+      throw error;
+    }
   }
 };

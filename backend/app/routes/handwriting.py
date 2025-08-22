@@ -33,7 +33,19 @@ class HandwritingFeedback(BaseModel):
     overall_score: int
     improvement_tips: List[str]
 
-# Initialize OpenAI client (you'll need to set OPENAI_API_KEY environment variable)
+class PracticeSentenceRequest(BaseModel):
+    target_letter: str
+    difficulty: str = "beginner"  # beginner, intermediate, advanced
+    sentence_count: int = 5
+
+class PracticeSentenceResponse(BaseModel):
+    target_letter: str
+    sentences: List[str]
+    total_letter_count: int
+    difficulty: str
+    practice_tips: List[str]
+
+
 try:
     openai_client = openai.OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 except:
@@ -229,6 +241,134 @@ async def get_handwriting_feedback(analysis: HandwritingAnalysisResponse):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generating feedback: {str(e)}")
+
+@router.post("/practice-sentences", response_model=PracticeSentenceResponse)
+async def generate_practice_sentences(request: PracticeSentenceRequest):
+    """
+    Generate practice sentences with frequent occurrences of a target letter using OpenAI
+    """
+    print(f"Received practice sentences request: {request}")
+    
+    if not openai_client:
+        print("OpenAI client not available")
+        raise HTTPException(
+            status_code=500, 
+            detail="OpenAI API key not configured. Please set OPENAI_API_KEY environment variable."
+        )
+    
+    try:
+        # Validate target letter
+        if not request.target_letter:
+            print(f"Missing target letter")
+            raise HTTPException(status_code=400, detail="Target letter is required")
+        
+        # Trim whitespace and validate
+        cleaned_letter = request.target_letter.strip()
+        if len(cleaned_letter) != 1:
+            print(f"Invalid target letter: '{request.target_letter}' (length: {len(request.target_letter)})")
+            raise HTTPException(status_code=400, detail="Target letter must be a single character")
+        
+        target_letter = cleaned_letter.upper()
+        print(f"Processing request for target letter: {target_letter}, difficulty: {request.difficulty}")
+        
+        # Create prompt for OpenAI
+        system_prompt = f"""
+        You are a handwriting practice expert. Generate {request.sentence_count} practice sentences that contain the letter '{target_letter}' very frequently.
+        
+        Requirements:
+        - Each sentence should contain the letter '{target_letter}' at least 3-5 times
+        - Sentences should be natural, meaningful, and engaging
+        - Vary the difficulty based on the requested level: {request.difficulty}
+        - Make sentences appropriate for handwriting practice
+        - Include both uppercase and lowercase versions of '{target_letter}' when possible
+        
+        Difficulty levels:
+        - beginner: Simple, short sentences with basic vocabulary
+        - intermediate: Medium-length sentences with varied vocabulary
+        - advanced: Longer, more complex sentences with sophisticated vocabulary
+        
+        Format your response as:
+        SENTENCES:
+        [Sentence 1]
+        [Sentence 2]
+        [Sentence 3]
+        [Sentence 4]
+        [Sentence 5]
+        
+        TIPS:
+        [Tip 1]
+        [Tip 2]
+        [Tip 3]
+        """
+        
+        # Call OpenAI API
+        response = openai_client.chat.completions.create(
+            model="gpt-4o",
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": f"Generate {request.sentence_count} practice sentences for the letter '{target_letter}' at {request.difficulty} difficulty level."
+                }
+            ],
+            max_tokens=500,
+            temperature=0.7
+        )
+        
+        # Parse the response
+        content = response.choices[0].message.content
+        
+        # Extract sentences
+        sentences = []
+        if "SENTENCES:" in content:
+            sentences_section = content.split("SENTENCES:")[1].split("TIPS:")[0].strip()
+            sentences = [s.strip() for s in sentences_section.split('\n') if s.strip() and not s.startswith('[') and not s.startswith('-')]
+        
+        # Extract practice tips
+        practice_tips = []
+        if "TIPS:" in content:
+            tips_section = content.split("TIPS:")[1].strip()
+            practice_tips = [tip.strip() for tip in tips_section.split('\n') if tip.strip() and not tip.startswith('[') and not tip.startswith('-')]
+        
+        # If parsing failed, generate fallback content
+        if not sentences:
+            sentences = [
+                f"The {target_letter} is a letter we practice often.",
+                f"Every {target_letter} should be written clearly.",
+                f"Practice makes perfect with the letter {target_letter}.",
+                f"The {target_letter} appears in many words we use daily.",
+                f"Writing {target_letter} well takes time and effort."
+            ]
+        
+        if not practice_tips:
+            practice_tips = [
+                f"Focus on consistent sizing of the letter {target_letter}",
+                f"Practice both uppercase and lowercase {target_letter}",
+                f"Pay attention to spacing around the letter {target_letter}",
+                f"Use lined paper to maintain proper alignment",
+                f"Take your time with each stroke of the letter {target_letter}"
+            ]
+        
+        # Count total occurrences of the target letter
+        total_letter_count = sum(sentence.upper().count(target_letter) for sentence in sentences)
+        
+        return PracticeSentenceResponse(
+            target_letter=target_letter,
+            sentences=sentences[:request.sentence_count],
+            total_letter_count=total_letter_count,
+            difficulty=request.difficulty,
+            practice_tips=practice_tips[:5]
+        )
+        
+    except Exception as e:
+        print(f"Error in generate_practice_sentences: {str(e)}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error generating practice sentences: {str(e)}")
 
 @router.get("/demo")
 async def get_demo_analysis():

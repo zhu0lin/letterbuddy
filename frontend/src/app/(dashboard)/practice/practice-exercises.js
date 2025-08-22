@@ -1,16 +1,21 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Button, Card } from '@/components/ui';
+import { Button, Card, LoadingSpinner } from '@/components/ui';
 import { useAuth, useHandwriting } from '@/context'; // Add useHandwriting import
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { api } from '@/lib/api';
 
 export default function PracticeExercises() {
   const { isAuthenticated, loading } = useAuth();
   const { lettersToImprove } = useHandwriting(); // Get letters to improve from context
   const router = useRouter();
   const [isPracticing, setIsPracticing] = useState(false);
+  const [practiceSentences, setPracticeSentences] = useState(null);
+  const [isGeneratingSentences, setIsGeneratingSentences] = useState(false);
+  const [difficulty, setDifficulty] = useState('beginner');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     if (isAuthenticated === false && !loading) {
@@ -35,8 +40,10 @@ export default function PracticeExercises() {
     return null;
   }
 
-  // Use letters from analysis or fallback to 'A'
-  const practiceLetters = lettersToImprove.length > 0 ? lettersToImprove : ['A'];
+  // Use letters from analysis or fallback to 'A', and clean any whitespace
+  const practiceLetters = lettersToImprove.length > 0 
+    ? lettersToImprove.map(letter => letter.trim()).filter(letter => letter.length > 0)
+    : ['A'];
 
   // Single practice exercise for the first letter that needs improvement
   const practiceExercise = {
@@ -52,8 +59,39 @@ export default function PracticeExercises() {
     ]
   };
 
-  const handleStartPractice = () => {
+  const handleStartPractice = async () => {
+    console.log('Starting practice with:', { practiceLetters, difficulty });
+    
+    if (!practiceLetters || practiceLetters.length === 0) {
+      setError('No letters available for practice. Please upload a handwriting sample first.');
+      return;
+    }
+    
+    const targetLetter = practiceLetters[0];
+    if (!targetLetter) {
+      setError('Invalid target letter. Please try again.');
+      return;
+    }
+    
     setIsPracticing(true);
+    setIsGeneratingSentences(true);
+    setError(null);
+    
+    try {
+      console.log('Calling API with:', { targetLetter, difficulty });
+      const result = await api.generatePracticeSentences(
+        targetLetter, 
+        difficulty, 
+        5
+      );
+      console.log('API result:', result);
+      setPracticeSentences(result);
+    } catch (err) {
+      console.error('Failed to generate practice sentences:', err);
+      setError(err.message);
+    } finally {
+      setIsGeneratingSentences(false);
+    }
   };
 
   return (
@@ -92,12 +130,27 @@ export default function PracticeExercises() {
               </div>
 
               {!isPracticing ? (
-                <Button
-                  onClick={handleStartPractice}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3"
-                >
-                  Start Practice
-                </Button>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center space-x-4 mb-4">
+                    <label className="text-sm font-medium text-gray-700">Difficulty:</label>
+                    <select 
+                      value={difficulty} 
+                      onChange={(e) => setDifficulty(e.target.value)}
+                      className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="beginner">Beginner</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="advanced">Advanced</option>
+                    </select>
+                  </div>
+                  
+                  <Button
+                    onClick={handleStartPractice}
+                    className="w-full bg-blue-600 hover:bg-blue-700 text-lg py-3"
+                  >
+                    Start Practice
+                  </Button>
+                </div>
               ) : (
                 <div className="space-y-4">
                   <div className="bg-green-50 rounded-lg p-4 border border-green-200">
@@ -105,10 +158,76 @@ export default function PracticeExercises() {
                     <p className="text-green-700 text-sm">Ready to practice letter {practiceLetters[0]}. Use lined paper and focus on consistency.</p>
                   </div>
                   
+                  {isGeneratingSentences ? (
+                    <div className="text-center py-8">
+                      <LoadingSpinner />
+                      <p className="text-gray-600 mt-4">Generating AI practice sentences...</p>
+                    </div>
+                  ) : error ? (
+                    <div className="bg-red-50 rounded-lg p-4 border border-red-200">
+                      <p className="text-red-700 text-sm">{error}</p>
+                      <Button 
+                        onClick={() => setIsPracticing(false)}
+                        className="mt-2 bg-red-600 hover:bg-red-700 text-sm"
+                      >
+                        Try Again
+                      </Button>
+                    </div>
+                  ) : practiceSentences ? (
+                    <div className="space-y-4">
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <h4 className="font-medium text-blue-800 mb-2">
+                          AI-Generated Practice Sentences for Letter &quot;{practiceSentences.target_letter}&quot;
+                        </h4>
+                                                  <p className="text-blue-700 text-sm mb-3">
+                            Difficulty: {practiceSentences.difficulty} • 
+                            Total &quot;{practiceSentences.target_letter}&quot; occurrences: {practiceSentences.total_letter_count}
+                          </p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {practiceSentences.sentences.map((sentence, index) => (
+                          <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                            <p className="text-gray-800 text-lg leading-relaxed">{sentence}</p>
+                            <div className="mt-2 text-sm text-gray-500">
+                              Letter count: {sentence.toUpperCase().split(practiceSentences.target_letter).length - 1}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <div className="bg-yellow-50 rounded-lg p-4 border border-yellow-200">
+                        <h5 className="font-medium text-yellow-800 mb-2">Practice Tips:</h5>
+                        <ul className="space-y-1">
+                          {practiceSentences.practice_tips.map((tip, index) => (
+                            <li key={index} className="text-yellow-700 text-sm flex items-start">
+                              <span className="text-yellow-600 mr-2">•</span>
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+                        <h5 className="font-medium text-blue-800 mb-2">📝 Next Steps:</h5>
+                        <p className="text-blue-700 text-sm mb-3">
+                          Now it&apos;s time to practice! Write these sentences on paper, focusing on the letter &quot;{practiceSentences.target_letter}&quot;.
+                        </p>
+                        <div className="flex items-center justify-center space-x-4">
+                          <Link href="/upload">
+                            <Button className="bg-blue-600 hover:bg-blue-700">
+                              📤 Upload Practice Sample
+                            </Button>
+                          </Link>
+                          <p className="text-blue-600 text-sm font-medium">
+                            Get new AI feedback on your improved handwriting!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                  
                   <div className="flex space-x-4">
-                    <Button className="bg-green-600 hover:bg-green-700 flex-1">
-                      📝 Continue Writing
-                    </Button>
                     <Button 
                       variant="outline" 
                       onClick={() => setIsPracticing(false)}
