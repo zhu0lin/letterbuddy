@@ -1,20 +1,37 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button, Card } from '@/components/ui';
 import { useAuth, useHandwriting } from '@/context'; // Add useHandwriting import
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 export default function PracticeExercises() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const { lettersToImprove } = useHandwriting(); // Get letters to improve from context
   const router = useRouter();
   const [isPracticing, setIsPracticing] = useState(false);
 
-  // Redirect if not authenticated
+  useEffect(() => {
+    if (isAuthenticated === false && !loading) {
+      router.push('/login');
+    }
+  }, [isAuthenticated, loading, router]);
+
+  // Show loading state while checking authentication
+  if (loading || isAuthenticated === undefined) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
   if (!isAuthenticated) {
-    router.push('/login');
     return null;
   }
 

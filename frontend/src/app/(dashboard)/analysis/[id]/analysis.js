@@ -9,7 +9,7 @@ import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
 
 export default function AnalysisPage({ id }) {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const { handwritingSamples } = useHandwriting();
   const router = useRouter();
   const [sample, setSample] = useState(null);
@@ -17,25 +17,28 @@ export default function AnalysisPage({ id }) {
   const [analysisResult, setAnalysisResult] = useState(null);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isAuthenticated === false && !loading) {
       router.push('/login');
       return;
     }
 
-    // Find the sample by ID
-    const foundSample = handwritingSamples.find(s => s.id.toString() === id);
-    if (foundSample) {
-      setSample(foundSample);
-      setIsLoading(false);
-      // If we have analysis data, use it
-      if (foundSample.analysis) {
-        setAnalysisResult(foundSample.analysis);
+    // Only proceed if authenticated
+    if (isAuthenticated === true && !loading) {
+      // Find the sample by ID
+      const foundSample = handwritingSamples.find(s => s.id.toString() === id);
+      if (foundSample) {
+        setSample(foundSample);
+        setIsLoading(false);
+        // If we have analysis data, use it
+        if (foundSample.analysis) {
+          setAnalysisResult(foundSample.analysis);
+        }
+      } else {
+        // If sample not found in context, try to fetch from database
+        fetchSampleFromDatabase();
       }
-    } else {
-      // If sample not found in context, try to fetch from database
-      fetchSampleFromDatabase();
     }
-  }, [id, handwritingSamples, isAuthenticated, router]);
+  }, [id, handwritingSamples, isAuthenticated, loading, router]);
 
   const fetchSampleFromDatabase = async () => {
     try {
@@ -80,6 +83,19 @@ export default function AnalysisPage({ id }) {
     }
   };
 
+  // Show loading state while checking authentication
+  if (isAuthenticated === undefined) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
   if (!isAuthenticated) {
     return null;
   }

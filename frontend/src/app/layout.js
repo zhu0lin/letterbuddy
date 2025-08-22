@@ -17,6 +17,11 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "LetterBuddy - Transform Your Handwriting with AI",
   description: "Master beautiful, legible handwriting with AI-powered photo analysis. Perfect for iPad, Apple Pencil, and drawing tablets.",
+  icons: {
+    icon: '/favicon.svg',
+    shortcut: '/favicon.svg',
+    apple: '/favicon.svg',
+  },
 };
 
 export default function RootLayout({ children }) {

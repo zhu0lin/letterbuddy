@@ -8,37 +8,53 @@ import WelcomeMessage from '@/components/ui/WelcomeMessage';
 import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const { handwritingSamples, isLoading } = useHandwriting();
   const router = useRouter();
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [allImprovementLetters, setAllImprovementLetters] = useState([]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (isAuthenticated === false && !loading) {
       router.push('/login');
       return;
     }
 
-    // Wait for samples to load
-    if (!isLoading) {
-      setIsInitialLoading(false);
-      
-      // Extract all unique improvement letters from all samples
-      const improvements = [];
-      handwritingSamples.forEach(sample => {
-        if (sample.improvementLetters && Array.isArray(sample.improvementLetters)) {
-          sample.improvementLetters.forEach(letter => {
-            if (!improvements.includes(letter)) {
-              improvements.push(letter);
-            }
-          });
-        }
-      });
-      setAllImprovementLetters(improvements);
+    // Only proceed if authenticated
+    if (isAuthenticated === true && !loading) {
+      // Wait for samples to load
+      if (!isLoading) {
+        setIsInitialLoading(false);
+        
+        // Extract all unique improvement letters from all samples
+        const improvements = [];
+        handwritingSamples.forEach(sample => {
+          if (sample.improvementLetters && Array.isArray(sample.improvementLetters)) {
+            sample.improvementLetters.forEach(letter => {
+              if (!improvements.includes(letter)) {
+                improvements.push(letter);
+              }
+            });
+          }
+        });
+        setAllImprovementLetters(improvements);
+      }
     }
-  }, [isAuthenticated, router, isLoading, handwritingSamples]);
+  }, [isAuthenticated, loading, router, isLoading, handwritingSamples]);
 
+  // Show loading state while checking authentication
+  if (isAuthenticated === undefined) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated
   if (!isAuthenticated) {
     return null;
   }
