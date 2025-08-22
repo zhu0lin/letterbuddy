@@ -249,6 +249,25 @@ export default function UploadPage() {
                     </div>
                   </div>
 
+                  {/* Letters to Improve Section */}
+                  {analysisResult.letters_to_improve && analysisResult.letters_to_improve.length > 0 && (
+                    <div className="mb-6">
+                      <h4 className="font-medium text-green-700 mb-3">Letters to Improve</h4>
+                      <div className="bg-white rounded-lg p-4 border border-green-200">
+                        <div className="flex flex-wrap gap-2">
+                          {analysisResult.letters_to_improve.map((letter, index) => (
+                            <span key={index} className="bg-orange-100 text-orange-800 px-3 py-2 rounded-md text-sm font-mono font-semibold border border-orange-300">
+                              {letter}
+                            </span>
+                          ))}
+                        </div>
+                        <p className="text-gray-600 text-sm mt-3">
+                          Focus on practicing these letters to improve your overall handwriting quality.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
 
                   <div className="mb-6">
                     <h4 className="font-medium text-green-700 mb-3">Suggestions for Improvement</h4>

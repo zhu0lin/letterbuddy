@@ -71,17 +71,19 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Card className="border-2 border-green-200 hover:border-green-300 transition-colors cursor-pointer">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                </svg>
+          <Link href="/practice">
+            <Card className="border-2 border-green-200 hover:border-green-300 transition-colors cursor-pointer">
+              <div className="text-center p-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Practice Exercises</h3>
+                <p className="text-gray-600 text-sm">Get personalized practice based on feedback</p>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Practice Exercises</h3>
-              <p className="text-gray-600 text-sm">Get personalized practice based on feedback</p>
-            </div>
-          </Card>
+            </Card>
+          </Link>
 
           <Card className="border-2 border-purple-200 hover:border-purple-300 transition-colors cursor-pointer">
             <div className="text-center p-6">

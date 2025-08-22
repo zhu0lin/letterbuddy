@@ -24,6 +24,7 @@ class HandwritingAnalysisResponse(BaseModel):
     suggestions: List[str]
     confidence_score: float
     analysis: str
+    letters_to_improve: List[str]  # New field for letters that need improvement
 
 class HandwritingFeedback(BaseModel):
     letter_formation: str
@@ -68,6 +69,7 @@ async def analyze_handwriting(image: UploadFile = File(...)):
         QUALITY: [Excellent/Good/Fair/Needs Improvement]
         CONFIDENCE: [0.0-1.0 score]
         SUGGESTIONS: [List 3-5 specific improvement suggestions]
+        LETTERS_TO_IMPROVE: [List specific letters that need improvement, separated by commas]
         ANALYSIS: [Detailed analysis of handwriting quality, spacing, consistency, and readability]
 
         Focus on:
@@ -75,6 +77,12 @@ async def analyze_handwriting(image: UploadFile = File(...)):
         - Spacing between letters and words
         - Consistency of handwriting style
         - Readability and neatness
+        
+        For LETTERS_TO_IMPROVE, identify specific letters that:
+        - Have poor formation or are hard to read
+        - Are inconsistent in size or style
+        - Have spacing or alignment issues
+        - Could benefit from practice
         
         Provide constructive, encouraging feedback suitable for learning.
         """
@@ -115,6 +123,7 @@ async def analyze_handwriting(image: UploadFile = File(...)):
         handwriting_quality = "Good"
         suggestions = []
         confidence_score = 0.85
+        letters_to_improve = []
         
         # Extract detected letters
         if "DETECTED_LETTERS:" in analysis_text:
@@ -141,7 +150,7 @@ async def analyze_handwriting(image: UploadFile = File(...)):
         
         # Extract suggestions
         if "SUGGESTIONS:" in analysis_text:
-            suggestions_section = analysis_text.split("SUGGESTIONS:")[1].split("ANALYSIS:")[0] if "ANALYSIS:" in analysis_text else analysis_text.split("SUGGESTIONS:")[1]
+            suggestions_section = analysis_text.split("SUGGESTIONS:")[1].split("LETTERS_TO_IMPROVE:")[0] if "LETTERS_TO_IMPROVE:" in analysis_text else analysis_text.split("SUGGESTIONS:")[1]
             # Parse suggestions (assuming they're separated by newlines or commas)
             suggestions_text = suggestions_section.strip()
             if suggestions_text:
@@ -162,13 +171,21 @@ async def analyze_handwriting(image: UploadFile = File(...)):
                 "Focus on readability"
             ]
         
+        # Extract letters to improve
+        if "LETTERS_TO_IMPROVE:" in analysis_text:
+            letters_to_improve_section = analysis_text.split("LETTERS_TO_IMPROVE:")[1].split("\n")[0].strip()
+            if letters_to_improve_section:
+                letters_to_improve = [l.upper() for l in letters_to_improve_section.split(',') if l.strip()]
+                letters_to_improve = sorted(list(set(letters_to_improve)))
+        
         # Generate structured response
         return HandwritingAnalysisResponse(
             detected_letters=detected_letters,
             handwriting_quality=handwriting_quality,
             suggestions=suggestions[:5],  # Limit to 5 suggestions
             confidence_score=confidence_score,
-            analysis=analysis_text
+            analysis=analysis_text,
+            letters_to_improve=letters_to_improve # Include the new field
         )
         
     except Exception as e:
@@ -228,9 +245,11 @@ async def get_demo_analysis():
             "Improve line smoothness for better appearance"
         ],
         confidence_score=0.85,
+        letters_to_improve=["A", "E", "R", "S"],
         analysis="""DETECTED_LETTERS: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z
 QUALITY: Good
 CONFIDENCE: 0.85
 SUGGESTIONS: Practice letter 'A' formation with consistent angles, Work on maintaining even spacing between letters, Focus on consistent letter height and alignment, Improve line smoothness for better appearance
+LETTERS_TO_IMPROVE: A, E, R, S
 ANALYSIS: This is a demo analysis showing detected letters A through Z. The handwriting demonstrates good potential with clear letter formation and readable text. There's room for improvement in consistency and spacing, but overall the writing is neat and legible. The uppercase letters are well-formed with distinct shapes, though some could benefit from more consistent sizing and alignment."""
     )

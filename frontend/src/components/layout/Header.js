@@ -26,12 +26,25 @@ export default function Header() {
           
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
-              <Button 
-                onClick={handleLogout}
-                className="bg-gray-600 hover:bg-gray-700"
-              >
-                Logout
-              </Button>
+              <>
+                <nav className="hidden md:flex items-center space-x-6">
+                  <Link href="/dashboard" className="text-gray-600 hover:text-gray-900 font-medium">
+                    Dashboard
+                  </Link>
+                  <Link href="/practice" className="text-gray-600 hover:text-gray-900 font-medium">
+                    Practice
+                  </Link>
+                  <Link href="/upload" className="text-gray-600 hover:text-gray-900 font-medium">
+                    Upload
+                  </Link>
+                </nav>
+                <Button 
+                  onClick={handleLogout}
+                  className="bg-gray-600 hover:bg-gray-700"
+                >
+                  Logout
+                </Button>
+              </>
             ) : (
               <>
                 <Link href="/login">
