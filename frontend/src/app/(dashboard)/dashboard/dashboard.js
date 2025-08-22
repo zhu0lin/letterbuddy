@@ -25,6 +25,9 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, router, isLoading]);
 
+  // Get all samples that need practice
+  const needsPracticeSamples = handwritingSamples.filter(s => s.score < 75);
+
   if (!isAuthenticated) {
     return null;
   }
@@ -39,17 +42,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  // Calculate statistics
-  const totalSamples = handwritingSamples.length;
-  const averageScore = totalSamples > 0 
-    ? Math.round(handwritingSamples.reduce((acc, sample) => acc + sample.score, 0) / totalSamples)
-    : 0;
-  const highScores = handwritingSamples.filter(s => s.score >= 80).length;
-  const needsPractice = handwritingSamples.filter(s => s.score < 75).length;
-  
-  // Get recent samples (last 5)
-  const recentSamples = handwritingSamples.slice(0, 5);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8">
@@ -69,7 +61,7 @@ export default function DashboardPage() {
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <Link href="/upload">
-            <Card className="border-2 border-blue-200 hover:border-blue-300 transition-colors cursor-pointer h-full">
+            <Card className="border-2 border-blue-200 hover:border-blue-300 transition-colors cursor-pointer">
               <div className="text-center p-6">
                 <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +75,7 @@ export default function DashboardPage() {
           </Link>
 
           <Link href="/practice">
-            <Card className="border-2 border-green-200 hover:border-green-300 transition-colors cursor-pointer h-full">
+            <Card className="border-2 border-green-200 hover:border-green-300 transition-colors cursor-pointer">
               <div className="text-center p-6">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -96,33 +88,33 @@ export default function DashboardPage() {
             </Card>
           </Link>
 
-          <Link href="/progress">
-            <Card className="border-2 border-purple-200 hover:border-purple-300 transition-colors cursor-pointer h-full">
-              <div className="text-center p-6">
-                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Track Progress</h3>
-                <p className="text-gray-600 text-sm">See your improvement over time</p>
+          <Card className="border-2 border-purple-200 hover:border-purple-300 transition-colors cursor-pointer">
+            <div className="text-center p-6">
+              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
               </div>
-            </Card>
-          </Link>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Track Progress</h3>
+              <p className="text-gray-600 text-sm">See your improvement over time</p>
+            </div>
+          </Card>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-white shadow-md">
             <div className="text-center p-4">
-              <p className="text-3xl font-bold text-blue-600">{totalSamples}</p>
+              <p className="text-3xl font-bold text-blue-600">{handwritingSamples.length}</p>
               <p className="text-gray-600">Samples Analyzed</p>
             </div>
           </Card>
           <Card className="bg-white shadow-md">
             <div className="text-center p-4">
               <p className="text-3xl font-bold text-green-600">
-                {averageScore}%
+                {handwritingSamples.length > 0 
+                  ? Math.round(handwritingSamples.reduce((acc, sample) => acc + sample.score, 0) / handwritingSamples.length)
+                  : 0}%
               </p>
               <p className="text-gray-600">Average Score</p>
             </div>
@@ -130,7 +122,7 @@ export default function DashboardPage() {
           <Card className="bg-white shadow-md">
             <div className="text-center p-4">
               <p className="text-3xl font-bold text-purple-600">
-                {highScores}
+                {handwritingSamples.filter(s => s.score >= 80).length}
               </p>
               <p className="text-gray-600">High Scores</p>
             </div>
@@ -138,7 +130,7 @@ export default function DashboardPage() {
           <Card className="bg-white shadow-md">
             <div className="text-center p-4">
               <p className="text-3xl font-bold text-yellow-600">
-                {needsPractice}
+                {needsPracticeSamples.length}
               </p>
               <p className="text-gray-600">Need Practice</p>
             </div>
@@ -147,14 +139,14 @@ export default function DashboardPage() {
 
         {/* Recent Handwriting Samples */}
         <Card className="bg-white shadow-md">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 p-6 gap-4">
+          <div className="flex justify-between items-center mb-6 p-6">
             <h2 className="text-xl font-semibold text-gray-900">Recent Handwriting Samples</h2>
             <Link href="/upload">
               <Button>Upload New Sample</Button>
             </Link>
           </div>
           
-          {totalSamples === 0 ? (
+          {handwritingSamples.length === 0 ? (
             <div className="text-center py-12">
               <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,14 +160,14 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="space-y-4 px-6 pb-6">
-              {recentSamples.map((sample) => (
+              {handwritingSamples.map((sample) => (
                 <div
                   key={sample.id}
-                  className="flex flex-col md:flex-row items-start md:items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors gap-4"
+                  className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-start space-x-4 flex-1">
+                  <div className="flex items-center space-x-4 flex-1">
                     {sample.image && sample.image.trim() !== '' && (
-                      <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200 flex-shrink-0">
+                      <div className="w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
                         <img 
                           src={sample.image} 
                           alt="Handwriting sample" 
@@ -184,69 +176,60 @@ export default function DashboardPage() {
                       </div>
                     )}
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{sample.type || 'Handwriting Sample'}</h3>
+                      <h3 className="font-medium text-gray-900">{sample.type}</h3>
                       <p className="text-sm text-gray-600">
-                        Focus: {sample.focus || 'General handwriting'}
+                        Focus: {sample.focus}
                       </p>
-                      <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                        Feedback: {sample.feedback || 'No detailed feedback available'}
+                      <p className="text-sm text-gray-600 mt-1">
+                        Feedback: {sample.feedback}
                       </p>
                       <p className="text-xs text-gray-500 mt-2">
-                        Uploaded: {sample.uploadedAt ? sample.uploadedAt.toLocaleDateString() : 'Unknown date'}
+                        Uploaded: {sample.uploadedAt.toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full md:w-auto">
-                    <div className="text-left sm:text-right">
+                  <div className="flex items-center space-x-4">
+                    <div className="text-right">
                       <p className="text-2xl font-bold text-green-600">{sample.score}%</p>
                       <p className="text-xs text-gray-500">Score</p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex space-x-2">
                       <Link href={`/analysis/${sample.id}`}>
                         <Button size="sm" variant="outline">View Analysis</Button>
                       </Link>
-                      <Link href="/practice">
+                      <Link href={`/practice?sampleId=${sample.id}&allNeedsPractice=true`}>
                         <Button size="sm" variant="outline">Practice</Button>
                       </Link>
                     </div>
                   </div>
                 </div>
               ))}
-              {totalSamples > 5 && (
-                <div className="text-center pt-4">
-                  <Link href="/samples">
-                    <Button variant="outline">View All Samples</Button>
-                  </Link>
-                </div>
-              )}
             </div>
           )}
         </Card>
 
         {/* Practice Recommendations */}
-        {totalSamples > 0 && (
-          <Card className="bg-white shadow-md mt-8">
-            <div className="p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Recommended Next Steps</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
-                  <h3 className="font-medium text-blue-900 mb-2">Improve Letter Sizing</h3>
-                  <p className="text-blue-700 text-sm">Your letters vary in size. Try our sizing consistency exercises.</p>
-                  <Link href="/practice?focus=sizing">
-                    <Button size="sm" className="mt-2" variant="outline">Practice Sizing</Button>
-                  </Link>
-                </div>
-                <div className="p-4 border border-green-200 rounded-lg bg-green-50">
-                  <h3 className="font-medium text-green-900 mb-2">Master Cursive</h3>
-                  <p className="text-green-700 text-sm">Great job on basic strokes! Ready for more advanced cursive.</p>
-                  <Link href="/practice?focus=cursive">
-                    <Button size="sm" className="mt-2" variant="outline">Continue Cursive</Button>
-                  </Link>
-                </div>
+        <Card className="bg-white shadow-md mt-8">
+          <div className="p-6">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Recommended Next Steps</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
+                <h3 className="font-medium text-blue-900 mb-2">Improve Letter Sizing</h3>
+                <p className="text-blue-700 text-sm">Your letters vary in size. Try our sizing consistency exercises.</p>
+                <Link href="/practice?focus=sizing&allNeedsPractice=true">
+                  <Button size="sm" className="mt-2" variant="outline">Practice Sizing</Button>
+                </Link>
+              </div>
+              <div className="p-4 border border-green-200 rounded-lg bg-green-50">
+                <h3 className="font-medium text-green-900 mb-2">Master Cursive</h3>
+                <p className="text-green-700 text-sm">Great job on basic strokes! Ready for more advanced cursive.</p>
+                <Link href="/practice?focus=cursive&allNeedsPractice=true">
+                  <Button size="sm" className="mt-2" variant="outline">Continue Cursive</Button>
+                </Link>
               </div>
             </div>
-          </Card>
-        )}
+          </div>
+        </Card>
 
         {/* Upload Section */}
         <Card className="bg-white shadow-md mt-8">
@@ -257,14 +240,14 @@ export default function DashboardPage() {
               Perfect for iPad, Apple Pencil, and drawing tablets. 
               Upload photos of your writing and get personalized feedback to improve.
             </p>
-            <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <div className="flex justify-center space-x-4">
               <Link href="/upload">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto">
+                <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
                   Upload Handwriting Sample
                 </Button>
               </Link>
-              <Link href="/practice">
-                <Button size="lg" variant="outline" className="w-full sm:w-auto">
+              <Link href="/practice?allNeedsPractice=true">
+                <Button size="lg" variant="outline">
                   View Practice Exercises
                 </Button>
               </Link>
