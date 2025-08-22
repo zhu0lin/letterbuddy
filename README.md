@@ -1,35 +1,68 @@
-# LetterBuddy - AI-Powered Letter Writing Assistant
+# LetterBuddy - AI-Powered Handwriting Improvement Assistant
 
-A full-stack application with a Next.js frontend and Python FastAPI backend, designed to help users create beautiful, personalized letters with AI assistance.
+A full-stack application with a Next.js frontend and Python FastAPI backend, designed to help users improve their handwriting through AI-powered photo analysis and personalized practice exercises.
+
+## ✨ Features
+
+### 🖋️ **Handwriting Analysis**
+- **AI-Powered Photo Analysis**: Upload photos of your handwriting for instant feedback
+- **Letter Detection**: Identifies specific letters that need improvement
+- **Quality Assessment**: Provides scores and detailed feedback on spacing, consistency, and readability
+- **Personalized Suggestions**: AI-generated improvement tips tailored to your writing
+
+### 📚 **AI Practice System**
+- **Smart Practice Sentences**: OpenAI-generated sentences with frequent target letter occurrences
+- **Difficulty Levels**: Beginner, Intermediate, and Advanced practice content
+- **Personalized Practice Plans**: Focus on letters that need the most improvement
+- **Practice Tips**: AI-generated guidance for better handwriting
+
+### 🔐 **User Management**
+- **Secure Authentication**: JWT-based login system with Supabase
+- **Progress Tracking**: Monitor your handwriting improvement over time
+- **Sample History**: Keep track of all your uploaded handwriting samples
+
+### 🎨 **Modern UI/UX**
+- **Responsive Design**: Works perfectly on desktop, tablet, and mobile
+- **Beautiful Interface**: Clean, modern design with smooth animations
+- **Intuitive Navigation**: Easy-to-use dashboard and practice interface
 
 ## 🏗️ Project Structure
 
 ```
 letterbuddy/
-├── frontend/                 # Next.js Frontend Application
-│   ├── src/                  # Source code
-│   ├── public/               # Static assets
-│   ├── package.json          # Node.js dependencies
-│   ├── Dockerfile            # Frontend container
-│   └── ...
+├── frontend/                 # Next.js 15 Frontend Application
+│   ├── src/
+│   │   ├── app/             # App Router pages
+│   │   │   ├── (auth)/      # Authentication pages
+│   │   │   ├── (dashboard)/ # Protected dashboard pages
+│   │   │   └── upload/      # Handwriting upload
+│   │   ├── components/      # Reusable UI components
+│   │   ├── context/         # React context providers
+│   │   ├── hooks/           # Custom React hooks
+│   │   ├── lib/             # Utility functions and API
+│   │   └── styles/          # Global styles and Tailwind CSS
+│   ├── public/              # Static assets and favicon
+│   ├── package.json         # Node.js dependencies
+│   └── Dockerfile           # Frontend container
 ├── backend/                  # Python FastAPI Backend
-│   ├── app/                  # Application code
-│   │   ├── api/             # API endpoints
-│   │   ├── core/            # Configuration & database
-│   │   ├── models/          # SQLAlchemy models
-│   │   ├── schemas/         # Pydantic schemas
-│   │   └── services/        # Business logic
-│   ├── requirements.txt      # Python dependencies
-│   ├── main.py              # FastAPI application
-│   └── Dockerfile           # Backend container
-├── docker-compose.yml        # Multi-service orchestration
-└── README.md                 # This file
+│   ├── app/
+│   │   ├── routes/          # API endpoints
+│   │   │   ├── auth.py      # Authentication routes
+│   │   │   ├── handwriting.py # Handwriting analysis & practice
+│   │   │   ├── letters.py   # Letter management
+│   │   │   └── users.py     # User management
+│   │   └── __init__.py
+│   ├── requirements.txt     # Python dependencies
+│   ├── main.py             # FastAPI application
+│   └── Dockerfile          # Backend container
+├── docker-compose.yml       # Multi-service orchestration
+└── README.md               # This file
 ```
 
 ## 🚀 Quick Start with Docker
 
 ### Prerequisites
-- Docker
+- Docker Desktop
 - Docker Compose
 
 ### 1. Clone and Navigate
@@ -38,9 +71,26 @@ git clone <repository-url>
 cd letterbuddy
 ```
 
-### 2. Start All Services
+### 2. Set Environment Variables
+Create a `.env` file in the root directory:
 ```bash
-docker-compose up --build
+# OpenAI API Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Database Configuration
+DATABASE_URL=postgresql://letterbuddy:letterbuddy123@localhost:5432/letterbuddy
+
+# Secret Key for JWT tokens
+SECRET_KEY=your-secret-key-here-change-in-production
+
+# Environment
+ENVIRONMENT=development
+```
+
+### 3. Start All Services
+```bash
+# Load environment variables and start services
+source .env && docker-compose up --build -d
 ```
 
 This will start:
@@ -48,7 +98,7 @@ This will start:
 - **Backend API**: http://localhost:8000
 - **PostgreSQL**: localhost:5432
 
-### 3. Access the Application
+### 4. Access the Application
 - Open http://localhost:3000 in your browser
 - API documentation available at http://localhost:8000/docs
 
@@ -74,15 +124,22 @@ uvicorn main:app --reload
 
 ### Environment Variables
 
-#### Backend (.env)
+#### Root (.env)
 ```bash
-DATABASE_URL=postgresql://user:password@localhost/letterbuddy
-SECRET_KEY=your-secret-key-here
+# OpenAI API Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Database Configuration
+DATABASE_URL=postgresql://letterbuddy:letterbuddy123@localhost:5432/letterbuddy
+
+# Secret Key for JWT tokens
+SECRET_KEY=your-secret-key-here-change-in-production
+
+# Environment
 ENVIRONMENT=development
-DEBUG=true
 ```
 
-#### Frontend (.env.local)
+#### Frontend (Docker Environment)
 ```bash
 NEXT_PUBLIC_API_URL=http://localhost:8000
 ```
@@ -94,16 +151,30 @@ Once the backend is running, visit:
 - **ReDoc**: http://localhost:8000/redoc
 
 ### Available Endpoints
-- `POST /api/v1/auth/register` - User registration
-- `POST /api/v1/auth/login` - User authentication
-- `GET /api/v1/letters` - Get user letters
-- `POST /api/v1/letters` - Create new letter
-- `GET /api/v1/users/me` - Get current user info
+
+#### Authentication
+- `POST /auth/register` - User registration
+- `POST /auth/login` - User authentication
+
+#### Handwriting Analysis
+- `POST /handwriting/analyze` - Analyze handwriting from photo
+- `POST /handwriting/practice-sentences` - Generate AI practice sentences
+- `GET /handwriting/demo` - Get demo analysis response
+
+#### User Management
+- `GET /users/me` - Get current user info
+- `PUT /users/me` - Update user profile
+
+#### Letters
+- `GET /letters` - Get user letters
+- `POST /letters` - Create new letter
 
 ## 🗄️ Database
 
 The application uses PostgreSQL with the following main tables:
 - **users** - User accounts and authentication
+- **user_uploads** - Handwriting samples and analysis results
+- **user_letters_to_improve** - Letters that need practice
 - **letters** - User-created letters
 
 Database migrations are handled automatically on startup.
@@ -112,23 +183,31 @@ Database migrations are handled automatically on startup.
 
 ### Development
 ```bash
-# Start all services
-docker-compose up
-
-# Start in background
+# Start all services in background
 docker-compose up -d
 
+# Start with rebuild
+docker-compose up --build -d
+
 # View logs
-docker-compose logs -f
+docker-compose logs -f [service-name]
 
 # Stop all services
 docker-compose down
+
+# Restart specific service
+docker-compose restart [service-name]
 ```
 
-### Production Build
+### Service Management
 ```bash
-# Build production images
-docker-compose -f docker-compose.prod.yml up --build
+# Check status
+docker-compose ps
+
+# View logs for specific service
+docker logs letterbuddy-backend-1 -f
+docker logs letterbuddy-frontend-1 -f
+docker logs letterbuddy-postgres-1 -f
 ```
 
 ## 🧪 Testing
@@ -163,28 +242,55 @@ docker-compose up frontend
 
 ## 🔒 Security Features
 
-- JWT-based authentication
+- JWT-based authentication with Supabase
 - Password hashing with bcrypt
-- CORS configuration
+- CORS configuration for production domains
 - Environment-based configuration
 - Input validation with Pydantic
+- Secure file upload handling
+
+## 🌟 Key Technologies
+
+### Frontend
+- **Next.js 15** - React framework with App Router
+- **Tailwind CSS** - Utility-first CSS framework
+- **Supabase** - Authentication and database
+- **React Context** - State management
+
+### Backend
+- **FastAPI** - Modern Python web framework
+- **OpenAI GPT-4** - AI-powered content generation
+- **PostgreSQL** - Reliable database
+- **Pillow** - Image processing
+- **Uvicorn** - ASGI server
+
+### Infrastructure
+- **Docker** - Containerization
+- **Docker Compose** - Multi-service orchestration
+- **PostgreSQL** - Database service
 
 ## 🚧 Development Roadmap
 
-- [ ] AI-powered letter suggestions
-- [ ] Letter templates
-- [ ] User preferences
-- [ ] Letter sharing
-- [ ] Export functionality
-- [ ] Mobile app
+- [x] **AI-powered handwriting analysis** ✅
+- [x] **Personalized practice sentences** ✅
+- [x] **User authentication system** ✅
+- [x] **Progress tracking** ✅
+- [x] **Modern responsive UI** ✅
+- [ ] **Letter templates**
+- [ ] **Export functionality**
+- [ ] **Mobile app**
+- [ ] **Advanced analytics**
+- [ ] **Social features**
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes
-4. Add tests
-5. Submit a pull request
+4. Add tests if applicable
+5. Commit your changes (`git commit -m 'Add amazing feature'`)
+6. Push to the branch (`git push origin feature/amazing-feature`)
+7. Open a Pull Request
 
 ## 📄 License
 
@@ -194,5 +300,16 @@ This project is licensed under the MIT License.
 
 For support and questions:
 - Create an issue in the repository
-- Check the API documentation at `/docs`
-- Review the code examples in the `examples/` directory
+- Check the API documentation at http://localhost:8000/docs
+- Review the code examples in the source code
+
+## 🎯 Getting Started with Handwriting Improvement
+
+1. **Sign Up**: Create your LetterBuddy account
+2. **Upload Sample**: Take a photo of your handwriting and upload it
+3. **Get Analysis**: Receive AI-powered feedback on your writing
+4. **Practice**: Use AI-generated sentences to improve specific letters
+5. **Track Progress**: Monitor your improvement over time
+6. **Upload Again**: Submit new samples to see your progress
+
+Start your handwriting improvement journey today! 🚀
