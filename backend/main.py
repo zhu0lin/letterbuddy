@@ -13,10 +13,16 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# CORS middleware - allow all origins for production
+# CORS middleware - explicitly allow your Vercel domain
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for production
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:3001", 
+        "https://letterbuddy.vercel.app",
+        "https://letterbuddy-git-main-zhu0lin.vercel.app",
+        "https://letterbuddy-zhu0lin.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
